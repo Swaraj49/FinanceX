@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: financial-noting-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+        
+databases:
+  - name: financial-noting-db
+    databaseName: financial_noting
+    user: admin
+    plan: free
