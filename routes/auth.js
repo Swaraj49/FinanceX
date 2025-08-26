@@ -43,7 +43,8 @@ router.post('/register', [
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
