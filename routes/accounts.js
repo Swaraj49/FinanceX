@@ -8,9 +8,12 @@ const router = express.Router();
 // Get all accounts for user
 router.get('/', auth, async (req, res) => {
   try {
+    console.log('📋 Fetching vaults for user:', req.user._id);
     const accounts = await Account.find({ user: req.user._id });
+    console.log('📊 Found', accounts.length, 'vaults');
     res.json(accounts);
   } catch (error) {
+    console.error('❌ Error fetching vaults:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -22,8 +25,12 @@ router.post('/', auth, [
   body('balance').optional().isNumeric()
 ], async (req, res) => {
   try {
+    console.log('🔐 Creating vault for user:', req.user._id);
+    console.log('📝 Vault data:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -33,9 +40,11 @@ router.post('/', auth, [
     });
 
     await account.save();
+    console.log('✅ Vault created successfully:', account._id);
     res.status(201).json(account);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error creating vault:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
