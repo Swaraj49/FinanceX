@@ -13,26 +13,39 @@ router.post('/register', [
   body('password').isLength({ min: 6 })
 ], async (req, res) => {
   try {
+    console.log('🚀 Registration attempt:', { 
+      name: req.body.name, 
+      email: req.body.email,
+      passwordLength: req.body.password?.length 
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { name, email, password } = req.body;
     
+    console.log('🔍 Checking for existing user with email:', email);
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('❌ User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    console.log('👤 Creating new user...');
     const user = new User({ name, email, password });
     await user.save();
+    console.log('✅ User created successfully:', user._id);
 
+    console.log('🔑 Generating JWT token...');
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || 'fallback-secret',
       { expiresIn: '7d' }
     );
+    console.log('✅ Token generated successfully');
 
     res.status(201).json({
       token,
@@ -42,9 +55,19 @@ router.post('/register', [
         email: user.email
       }
     });
+    console.log('✅ Registration completed successfully for:', email);
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('❌ Registration error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

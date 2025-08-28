@@ -58,9 +58,35 @@ app.get('/health', (req, res) => {
 });
 
 // MongoDB connection
+console.log('🔗 Attempting MongoDB connection...');
+console.log('📍 MongoDB URI:', process.env.MONGODB_URI ? 'Set (hidden for security)' : 'Not set');
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/financial-noting')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+    console.log('📊 Database name:', mongoose.connection.name);
+    console.log('🌐 Connection state:', mongoose.connection.readyState);
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', {
+      message: err.message,
+      code: err.code,
+      name: err.name
+    });
+  });
+
+// MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB runtime error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('🔄 MongoDB reconnected');
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

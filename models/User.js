@@ -24,9 +24,16 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
+  try {
+    if (!this.isModified('password')) return next();
+    console.log('🔐 Hashing password for user:', this.email);
+    this.password = await bcrypt.hash(this.password, 12);
+    console.log('✅ Password hashed successfully');
+    next();
+  } catch (error) {
+    console.error('❌ Password hashing error:', error);
+    next(error);
+  }
 });
 
 userSchema.methods.comparePassword = async function(candidatePassword) {
