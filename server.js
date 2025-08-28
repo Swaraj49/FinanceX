@@ -62,10 +62,30 @@ console.log('🔗 Attempting MongoDB connection...');
 console.log('📍 MongoDB URI:', process.env.MONGODB_URI ? 'Set (hidden for security)' : 'Not set');
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/financial-noting')
-  .then(() => {
+  .then(async () => {
     console.log('✅ MongoDB connected successfully');
     console.log('📊 Database name:', mongoose.connection.name);
     console.log('🌐 Connection state:', mongoose.connection.readyState);
+    
+    // Fix: Drop the problematic username index
+    try {
+      const User = require('./models/User');
+      
+      // Try to drop the username index
+      await User.collection.dropIndex('username_1');
+      console.log('🗑️ Dropped problematic username index');
+      
+      // Also clean up any users with null username
+      const result = await User.deleteMany({ username: null });
+      console.log(`🧹 Cleaned up ${result.deletedCount} users with null username`);
+      
+    } catch (error) {
+      if (error.code === 27 || error.codeName === 'IndexNotFound') {
+        console.log('ℹ️ Username index not found (already dropped or never existed)');
+      } else {
+        console.log('⚠️ Could not drop username index:', error.message);
+      }
+    }
   })
   .catch(err => {
     console.error('❌ MongoDB connection error:', {
